@@ -38,4 +38,4 @@ def makeimage( text, stars, filename, screensize=700, bgcolor = (20,20,65) ) :
 
 if __name__ == "__main__" :
     (text,stars) = load_stars( "stars.txt" )
-    makeimage( text, stars, "result2.png")
+    makeimage( text, stars, "result.png")

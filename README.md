@@ -2,7 +2,7 @@
 ssgen is a starry sky generator.
 ssgen calculates positions of stars and generates images of starry sky.
 You can get a starry sky of any place and time.
-
+![starry sky image](https://raw.github.com/wiki/sndtkrh/ssgen/images/starrysky.png "starrysky")
 ## Requirements
 - `g++ 4.7 or more` to compile ssgen
 - `Python3 or more`
