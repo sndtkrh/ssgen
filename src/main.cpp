@@ -4,6 +4,7 @@
 #include <map>
 #include <set>
 #include <tuple>
+#include <fstream>
 #include "star.hpp"
 #include "argparser.hpp"
 using namespace std;
@@ -16,6 +17,7 @@ extern tuple<double,double,double> calc_xyz( Star star, double latitude, double 
 
 void print_usage();
 void get_time(int & year, int & month, int & day, int & hour, int & mini, int & sec, double & dh);
+vector<string> split( string str, char c );
 
 const string version = "0.1";
 int main(int argc, char * argv[]){
@@ -25,11 +27,13 @@ int main(int argc, char * argv[]){
   double dh = 9.0;
   string starfilename = "./data/hip.txt";
   string outputfilename = "";
+  string citiesdatafilename = "./data/cities_data.txt";
+  string city_name = "";
 
   get_time( year, month, day, hour, mini, sec, dh );
 
   if( argc > 1 ){
-    ArgParser argp( argc, argv, set<string>{"h", "t", "d", "c", "s", "o"});
+    ArgParser argp( argc, argv, set<string>{"h", "t", "d", "p", "s", "o", "c"});
     if( ! argp.success ){
       fprintf(stderr, "%s\n", argp.err_msg.c_str() );
       return 1;
@@ -42,12 +46,38 @@ int main(int argc, char * argv[]){
     if( f ) sscanf(o_arg.c_str(), "%d/%d/%d,%d:%d:%d", &year, &month, &day, &hour, &mini, &sec);
     tie(f,o_arg) = argp.get_opt( "d" );
     if( f ) sscanf(o_arg.c_str(), "%lf", &dh);
-    tie(f,o_arg) = argp.get_opt( "c" );
+    tie(f,o_arg) = argp.get_opt( "p" );
     if( f ) sscanf(o_arg.c_str(), "%lf,%lf", &longitude, &latitude );
     tie(f,o_arg) = argp.get_opt( "s" );
     if( f ) starfilename = o_arg;
     tie(f,o_arg) = argp.get_opt( "o" );
     if( f ) outputfilename = o_arg;
+    tie(f,o_arg) = argp.get_opt( "c" );
+    if( f ){
+      city_name = o_arg;
+      ifstream ifs( citiesdatafilename, ios::in );
+      string line;
+      bool success = false;
+      if( ifs.fail() ){
+	fprintf(stderr, "Failed opening cities data file: %s\n", citiesdatafilename.c_str() );
+	return 1;
+      }
+      while( getline( ifs, line ) ){
+	if( line[0] == '#' ) continue;
+	vector<string> data = split( line, ',' );
+	if( data[0] == city_name ){
+	  sscanf( data[1].c_str(), "%lf", &longitude );
+	  sscanf( data[2].c_str(), "%lf", &latitude );
+	  sscanf( data[3].c_str(), "%lf", &dh );
+	  success = true;
+	  break;
+	}
+      }
+      if( ! success ){
+	fprintf(stderr, "No such a city: %s\n", city_name.c_str() );
+	return 1;
+      }
+    }
   }
 
   FILE *stream;
@@ -60,12 +90,12 @@ int main(int argc, char * argv[]){
   vector<Star> stars;
   if( ! load_stars( stars, starfilename ) ){
     fprintf(stderr, "Failed loading star data file: %s\n", starfilename.c_str() );
-    return 0;
+    return 1;
   }
 
-  printf("# *** Starry Sky Generator *** #\n");
+  printf("# *** ssgen ***\n");
   printf("# version %s\n", version.c_str() );
-  printf("# %04d/%02d/%02d %02d:%02d:%02d GMT%+.1f\n", year, month, day, hour, mini, sec, dh );
+  printf("# %04d/%02d/%02d %02d:%02d:%02d UTC%+.1f\n", year, month, day, hour, mini, sec, dh );
   printf("# longitude=%f\n", longitude );
   printf("# latitude=%f\n",  latitude );
   for( auto star : stars ){
@@ -80,7 +110,7 @@ void print_usage(){
   fprintf(stderr, "Usage: ssgen [options]\n");
   fprintf(stderr, "    -t\tyyyy/mm/dd,hour:min:sec\n");
   fprintf(stderr, "    -d\t<time differencial>\n");
-  fprintf(stderr, "    -c\tlongitude,latitude\n");
+  fprintf(stderr, "    -p\tlongitude,latitude\n");
   fprintf(stderr, "\n");
   fprintf(stderr, "    -o\t<output file name>\n");
   fprintf(stderr, "    -s\t<star data file name>\n");
@@ -109,4 +139,16 @@ void get_time(int & year, int & month, int & day, int & hour, int & mini, int & 
       dh = hour - gm_hour + (mini - gm_min) / 60.0;
     }
     return;
+}
+vector<string> split( string str, char c ){
+  vector<string> res;
+  int p = 0;
+  if( str[ str.size()-1 ] != c ) str += c;
+  for(unsigned int i = 0; i < str.size(); i++){
+    if( str[i] == c ){
+      res.emplace_back( str.substr( p, i ) );
+      p = i + 1;
+    }
+  }
+  return res;
 }
