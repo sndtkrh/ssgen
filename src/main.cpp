@@ -33,7 +33,7 @@ int main(int argc, char * argv[]){
   get_time( year, month, day, hour, mini, sec, dh );
 
   if( argc > 1 ){
-    ArgParser argp( argc, argv, set<string>{"h", "t", "d", "p", "s", "o", "c"});
+    ArgParser argp( argc, argv, set<string>{"h", "t", "d", "p", "s", "o", "c", "f"});
     if( ! argp.success ){
       fprintf(stderr, "%s\n", argp.err_msg.c_str() );
       return 1;
@@ -52,6 +52,8 @@ int main(int argc, char * argv[]){
     if( f ) starfilename = o_arg;
     tie(f,o_arg) = argp.get_opt( "o" );
     if( f ) outputfilename = o_arg;
+    tie(f,o_arg) = argp.get_opt( "f" );
+    if( f ) citiesdatafilename = o_arg;
     tie(f,o_arg) = argp.get_opt( "c" );
     if( f ){
       city_name = o_arg;
@@ -114,6 +116,9 @@ void print_usage(){
   fprintf(stderr, "\n");
   fprintf(stderr, "    -o\t<output file name>\n");
   fprintf(stderr, "    -s\t<star data file name>\n");
+  fprintf(stderr, "\n");
+  fprintf(stderr, "    -f\t<cities data file name>\n");
+  fprintf(stderr, "    -c\t<city name>\n" );
   fprintf(stderr, "\n");
   fprintf(stderr, "    -h\t(help)\n");
   fprintf(stderr, "\n");

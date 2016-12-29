@@ -3,3 +3,4 @@ build
 ssgen
 *.png
 .DS_store
+__pycache__
