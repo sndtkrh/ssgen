@@ -9,12 +9,14 @@ You can get a starry sky of any place and time.
 	- `Pillow` to generate `.png` image.
 
 ## How to build
-```$ make```
+```
+$ make
+```
 
 ## How to get starry sky
 Firstly, you will get position data of stars as follow:
 ```
-$ ./ssgen -o stars.txt
+$ ./ssgen -c Tokyo -o stars.txt
 ```
 Secondary, you can get starry sky image:
 ```
