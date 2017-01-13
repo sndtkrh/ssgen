@@ -15,6 +15,9 @@ extern double hms2h( double hour, double mini, double sec );
 extern bool load_stars( vector<Star> &stars, string filename );
 extern tuple<double,double,double> calc_xyz( Star star, double latitude, double sidereal_h );
 
+int output(vector<Star> & stars, string outputfilename,
+	    int year, int month, int day, int hour, int mini, int sec, double dh,
+	    double latitude, double longitude);
 void print_usage();
 void get_time(int & year, int & month, int & day, int & hour, int & mini, int & sec, double & dh);
 vector<string> split( string str, char c );
@@ -82,19 +85,26 @@ int main(int argc, char * argv[]){
     }
   }
 
-  FILE *stream;
-  if ( outputfilename.size() > 0 && (stream = freopen(outputfilename.c_str(), "w", stdout)) == NULL ) {
-    fprintf(stderr, "Failed opening output file: %s\n", outputfilename.c_str() );
-    return 1;
-  }
-
-  double sidereal_hour = ST2sidereal( year, month, day, hms2h(hour, mini, sec), dh, longitude );
   vector<Star> stars;
   if( ! load_stars( stars, starfilename ) ){
     fprintf(stderr, "Failed loading star data file: %s\n", starfilename.c_str() );
     return 1;
   }
+  int ret = output( stars, outputfilename, year, month, day, hour, mini, sec, dh, latitude, longitude );
 
+  return ret;
+}
+
+int output(vector<Star> & stars, string outputfilename,
+	    int year, int month, int day,
+	    int hour, int mini, int sec, double dh,
+	    double latitude, double longitude){
+  FILE *stream;
+  if ( outputfilename.size() > 0 && (stream = freopen(outputfilename.c_str(), "w", stdout)) == NULL ) {
+    fprintf(stderr, "Failed opening output file: %s\n", outputfilename.c_str() );
+    return 1;
+  }
+  double sidereal_hour = ST2sidereal( year, month, day, hms2h(hour, mini, sec), dh, longitude );
   printf("# *** ssgen ***\n");
   printf("# version %s\n", version.c_str() );
   printf("# %04d/%02d/%02d %02d:%02d:%02d UTC%+.1f\n", year, month, day, hour, mini, sec, dh );
@@ -107,7 +117,6 @@ int main(int argc, char * argv[]){
   }
   return 0;
 }
-
 void print_usage(){
   fprintf(stderr, "Usage: ssgen [options]\n");
   fprintf(stderr, "    -t\tyyyy/mm/dd,hour:min:sec\n");
