@@ -5,6 +5,9 @@
 #include <set>
 #include <tuple>
 #include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
 #include "star.hpp"
 #include "argparser.hpp"
 using namespace std;
@@ -16,8 +19,8 @@ extern bool load_stars( vector<Star> &stars, string filename );
 extern tuple<double,double,double> calc_xyz( Star star, double latitude, double sidereal_h );
 
 int output(vector<Star> & stars, string outputfilename,
-	    int year, int month, int day, int hour, int mini, int sec, double dh,
-	    double latitude, double longitude);
+	   int year, int month, int day, int hour, int mini, int sec, double dh,
+	   double latitude, double longitude, bool printinfo);
 void print_usage();
 void get_time(int & year, int & month, int & day, int & hour, int & mini, int & sec, double & dh);
 vector<string> split( string str, char c );
@@ -33,10 +36,13 @@ int main(int argc, char * argv[]){
   string citiesdatafilename = "./data/cities_data.txt";
   string city_name = "";
 
+  int n = 1; // number of output
+  int interval = 3600;
+
   get_time( year, month, day, hour, mini, sec, dh );
 
   if( argc > 1 ){
-    ArgParser argp( argc, argv, set<string>{"h", "t", "d", "p", "s", "o", "c", "f"});
+    ArgParser argp( argc, argv, set<string>{"h", "t", "d", "p", "s", "o", "c", "f", "n", "i"});
     if( ! argp.success ){
       fprintf(stderr, "%s\n", argp.err_msg.c_str() );
       return 1;
@@ -83,6 +89,10 @@ int main(int argc, char * argv[]){
 	return 1;
       }
     }
+    tie(f,o_arg) = argp.get_opt( "n" );
+    if( f ) sscanf(o_arg.c_str(), "%d", &n );
+    tie(f,o_arg) = argp.get_opt( "i" );
+    if( f ) sscanf(o_arg.c_str(), "%d", &interval );
   }
 
   vector<Star> stars;
@@ -90,26 +100,41 @@ int main(int argc, char * argv[]){
     fprintf(stderr, "Failed loading star data file: %s\n", starfilename.c_str() );
     return 1;
   }
-  int ret = output( stars, outputfilename, year, month, day, hour, mini, sec, dh, latitude, longitude );
+
+  int ret;
+  if( n == 1 ){
+    ret = output( stars, outputfilename, year, month, day, hour, mini, sec, dh, latitude, longitude, true );
+  }else{
+    for(int i = 0; i < n; i++){
+      ostringstream sout;
+      sout << std::setfill('0') << std::setw(6) << i;
+      string number = sout.str();
+      string ofname = outputfilename + number;
+      ret = output( stars, ofname, year, month, day, hour, mini, sec + interval * i, dh, latitude, longitude, false );
+      if( ret ) break;
+    }
+  }
 
   return ret;
 }
 
 int output(vector<Star> & stars, string outputfilename,
-	    int year, int month, int day,
-	    int hour, int mini, int sec, double dh,
-	    double latitude, double longitude){
+	   int year, int month, int day,
+	   int hour, int mini, int sec, double dh,
+	   double latitude, double longitude, bool printinfo){
   FILE *stream;
   if ( outputfilename.size() > 0 && (stream = freopen(outputfilename.c_str(), "w", stdout)) == NULL ) {
     fprintf(stderr, "Failed opening output file: %s\n", outputfilename.c_str() );
     return 1;
   }
   double sidereal_hour = ST2sidereal( year, month, day, hms2h(hour, mini, sec), dh, longitude );
-  printf("# *** ssgen ***\n");
-  printf("# version %s\n", version.c_str() );
-  printf("# %04d/%02d/%02d %02d:%02d:%02d UTC%+.1f\n", year, month, day, hour, mini, sec, dh );
-  printf("# longitude=%f\n", longitude );
-  printf("# latitude=%f\n",  latitude );
+  if( printinfo ){
+    printf("# *** ssgen ***\n");
+    printf("# version %s\n", version.c_str() );
+    printf("# %04d/%02d/%02d %02d:%02d:%02d UTC%+.1f\n", year, month, day, hour, mini, sec, dh );
+    printf("# longitude=%f\n", longitude );
+    printf("# latitude=%f\n",  latitude );
+  }
   for( auto star : stars ){
     double x, y, z;
     tie(x,y,z) = calc_xyz( star, latitude, sidereal_hour );
