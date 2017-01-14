@@ -146,13 +146,16 @@ void print_usage(){
   fprintf(stderr, "Usage: ssgen [options]\n");
   fprintf(stderr, "    -t\tyyyy/mm/dd,hour:min:sec\n");
   fprintf(stderr, "    -d\t<time differencial>\n");
-  fprintf(stderr, "    -p\tlongitude,latitude\n");
+  fprintf(stderr, "    -p\t<longitude>,<latitude>\n");
   fprintf(stderr, "\n");
   fprintf(stderr, "    -o\t<output file name>\n");
   fprintf(stderr, "    -s\t<star data file name>\n");
   fprintf(stderr, "\n");
   fprintf(stderr, "    -f\t<cities data file name>\n");
   fprintf(stderr, "    -c\t<city name>\n" );
+  fprintf(stderr, "\n");
+  fprintf(stderr, "    -n\t<number of output files>\n");
+  fprintf(stderr, "    -i\t<interbal of output files> [sec]\n");
   fprintf(stderr, "\n");
   fprintf(stderr, "    -h\t(help)\n");
   fprintf(stderr, "\n");
